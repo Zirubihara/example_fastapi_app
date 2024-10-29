@@ -3,3 +3,4 @@ uvicorn
 pydantic
 black
 flake8
+isort
