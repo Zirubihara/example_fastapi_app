@@ -9,3 +9,10 @@ class UserResponse(BaseModel):
     class Config:
         title = "User Response Model"
         description = "Response model for user creation."
+        schema_extra = {
+            "example": {
+                "user_id": 1,
+                "name": "John Doe",
+                "email": "john.doe@example.com"
+            }
+        }

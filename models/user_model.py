@@ -9,4 +9,11 @@ class User(BaseModel):
     class Config:
         title = "User Model"
         description = "Model representing a user in the system."
+        schema_extra = {
+            "example": {
+                "id": 1,
+                "name": "John Doe",
+                "email": "john.doe@example.com"
+            }
+        }
 
