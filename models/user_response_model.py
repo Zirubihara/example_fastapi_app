@@ -13,6 +13,6 @@ class UserResponse(BaseModel):
             "example": {
                 "user_id": 1,
                 "name": "John Doe",
-                "email": "john.doe@example.com"
+                "email": "john.doe@example.com",
             }
         }
