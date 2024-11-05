@@ -16,7 +16,7 @@ app.add_middleware(
 )
 
 
-@app.get("/", summary="Root endpoint")
+@app.get("/", summary="Root endpoint", status_code=200)
 async def read_root() -> dict:
     """Returns a greeting in FastAPI."""
     return {"message": "Welcome to FastAPI!"}
