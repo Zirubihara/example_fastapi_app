@@ -1,12 +1,15 @@
-from pydantic import BaseModel, conlist, field_validator
-from typing import Annotated, List
+# models/odd_numbers_reponse_model.py
+from pydantic import BaseModel, field_validator
+from typing import List
 
 
 class OddNumbersResponse(BaseModel):
-    odd_numbers: Annotated[List[int], conlist(int, min_items=1)]
+    odd_numbers: List[int]
 
     @field_validator("odd_numbers", mode="before")
     def validate_odd_numbers(cls, v):
+        if len(v) < 1:
+            raise ValueError("At least one number must be provided")
         for number in v:
             if number % 2 == 0:
                 raise ValueError("All numbers must be odd")
