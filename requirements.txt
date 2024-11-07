@@ -4,3 +4,6 @@ pydantic
 black
 flake8
 isort
+sqlalchemy
+asyncpg  # dla asynchronicznego dostępu do PostgreSQL
+psycopg2  # dla synchronizacji z PostgreSQL

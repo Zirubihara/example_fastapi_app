@@ -5,6 +5,10 @@ from models.odd_numbers_reponse_model import OddNumbersResponse
 from models.user_model import User
 from models.user_response_model import UserResponse
 from logger import logger  # Import loggera
+from database import engine, SessionLocal
+from models.user import User
+from sqlalchemy import create_engine
+User.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -16,6 +20,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.post("/users/")
+async def create_user(name: str, email: str):
+    db = SessionLocal()
+    user = User(name=name, email=email)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    db.close()
+    return user
 
 @app.post("/users/", response_model=UserResponse, status_code=201)
 async def create_user(user: User) -> UserResponse:
