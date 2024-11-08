@@ -1,25 +1,27 @@
-# main.py
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import create_engine
+
+from database import SessionLocal, engine
+from logger import logger  # Import loggera
 from models.odd_numbers_reponse_model import OddNumbersResponse
+from models.user import User
 from models.user_model import User
 from models.user_response_model import UserResponse
-from logger import logger  # Import loggera
-from database import engine, SessionLocal
-from models.user import User
-from sqlalchemy import create_engine
+
 User.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
 # Middleware CORS
 app.add_middleware(
-    CORSMiddleware, 
+    CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 @app.post("/users/")
 async def create_user(name: str, email: str):
@@ -31,6 +33,7 @@ async def create_user(name: str, email: str):
     db.close()
     return user
 
+
 @app.post("/users/", response_model=UserResponse, status_code=201)
 async def create_user(user: User) -> UserResponse:
     """Creates a new user."""
@@ -40,6 +43,7 @@ async def create_user(user: User) -> UserResponse:
         raise HTTPException(status_code=400, detail="Invalid user ID.")
 
     return UserResponse(user_id=user.id, name=user.name, email=user.email)
+
 
 @app.get("/odd-numbers/", response_model=OddNumbersResponse, status_code=200)
 async def get_odd_numbers(start: int, end: int) -> OddNumbersResponse:
