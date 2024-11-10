@@ -1,15 +1,18 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
-
-from database import SessionLocal, engine
+from database import SessionLocal, Base  # Upewnij się, że importujesz Base
 from logger import logger  # Import loggera
-from models.odd_numbers_reponse_model import OddNumbersResponse
+from schemas.odd_numbers_reponse_model import OddNumbersResponse
 from models.user import User
-from models.user_model import User
-from models.user_response_model import UserResponse
+from schemas.user_response_model import UserResponse
 
-User.metadata.create_all(bind=engine)
+# Ustawienia bazy danych
+DATABASE_URL = "postgresql://myuser:mypassword@localhost/mydatabase"  # Zaktualizuj zgodnie z Twoimi danymi
+engine = create_engine(DATABASE_URL)
+
+# Tworzenie tabel
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -22,8 +25,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to the FastAPI application!"}
 
-@app.post("/users/")
+@app.post("/users/", response_model=UserResponse, status_code=201)
 async def create_user(name: str, email: str):
     db = SessionLocal()
     user = User(name=name, email=email)
@@ -31,19 +37,8 @@ async def create_user(name: str, email: str):
     db.commit()
     db.refresh(user)
     db.close()
-    return user
-
-
-@app.post("/users/", response_model=UserResponse, status_code=201)
-async def create_user(user: User) -> UserResponse:
-    """Creates a new user."""
-    logger.info(f"Creating user with ID: {user.id}")  # Logowanie informacji
-    if user.id <= 0:  # Przykład: nieprawidłowy identyfikator
-        logger.error("Invalid user ID provided.")  # Logowanie błędu
-        raise HTTPException(status_code=400, detail="Invalid user ID.")
-
+    logger.info(f"Created user with ID: {user.id}")  # Logowanie informacji
     return UserResponse(user_id=user.id, name=user.name, email=user.email)
-
 
 @app.get("/odd-numbers/", response_model=OddNumbersResponse, status_code=200)
 async def get_odd_numbers(start: int, end: int) -> OddNumbersResponse:
