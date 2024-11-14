@@ -1,5 +1,6 @@
 # Makefile for FastAPI Application
 
+
 # Variables
 VENV_NAME = venv
 PYTHON = $(VENV_NAME)/bin/python
