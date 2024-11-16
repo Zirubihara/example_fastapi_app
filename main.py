@@ -6,6 +6,7 @@ from logger import logger  # Import loggera
 from schemas.odd_numbers_reponse_model import OddNumbersResponse
 from models.user import User
 from schemas.user_response_model import UserResponse
+from sqlalchemy.orm import Session
 
 # Ustawienia bazy danych
 DATABASE_URL = "postgresql://myuser:mypassword@localhost/mydatabase"  # Zaktualizuj zgodnie z Twoimi danymi
@@ -25,9 +26,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to the FastAPI application!"}
+
 
 @app.post("/users/", response_model=UserResponse, status_code=201)
 async def create_user(name: str, email: str):
@@ -39,6 +42,19 @@ async def create_user(name: str, email: str):
     db.close()
     logger.info(f"Created user with ID: {user.id}")  # Logowanie informacji
     return UserResponse(user_id=user.id, name=user.name, email=user.email)
+
+
+@app.get("/users/", response_model=list[UserResponse], status_code=200)
+async def get_users():
+    """Returns a list of users."""
+    db: Session = SessionLocal()
+    users = db.query(User).all()  # Pobierz wszystkich użytkowników
+    db.close()
+    return [
+        UserResponse(user_id=user.id, name=user.name, email=user.email)
+        for user in users
+    ]
+
 
 @app.get("/odd-numbers/", response_model=OddNumbersResponse, status_code=200)
 async def get_odd_numbers(start: int, end: int) -> OddNumbersResponse:
