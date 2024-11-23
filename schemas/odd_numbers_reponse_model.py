@@ -1,7 +1,5 @@
-# models/odd_numbers_reponse_model.py
 from pydantic import BaseModel, field_validator
 from typing import List
-
 
 class OddNumbersResponse(BaseModel):
     odd_numbers: List[int]
@@ -24,4 +22,4 @@ class OddNumbersResponse(BaseModel):
     class Config:
         title = "Odd Numbers Response Model"
         description = "Response model for odd numbers."
-        schema_extra = {"example": {"odd_numbers": [1, 3, 5, 7, 9]}}
+        json_schema_extra = {"example": {"odd_numbers": [1, 3, 5, 7, 9]}}  # Updated key

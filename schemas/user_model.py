@@ -1,6 +1,5 @@
 from pydantic import BaseModel, EmailStr, field_validator, model_validator
 
-
 class User(BaseModel):
     id: int
     name: str
@@ -22,7 +21,7 @@ class User(BaseModel):
     class Config:
         title = "User Model"
         description = "Model representing a user in the system."
-        schema_extra = {
+        json_schema_extra = {  # Updated key
             "example": {
                 "id": 1,
                 "name": "John",
