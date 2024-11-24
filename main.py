@@ -1,5 +1,6 @@
+import os
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from middleware import add_cors_middleware
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -9,14 +10,18 @@ from database import (
 )  # Ensure you have the correct path to the database file
 from logger import logger  # Import logger
 from models.user import User  # Updated import for SQLAlchemy model
-from schemas.user_response_model import UserResponse  # Updated import for Pydantic model
+from schemas.user_response_model import (
+    UserResponse,
+)  # Updated import for Pydantic model
 from schemas.odd_numbers_reponse_model import (
     OddNumbersResponse,
 )  # Updated import for Pydantic model
 
-# Database settings
-DATABASE_URL = "postgresql://myuser:mypassword@localhost/mydatabase"  # Update according to your data
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 engine = create_engine(DATABASE_URL)
+
 
 # Create tables
 Base.metadata.create_all(bind=engine)

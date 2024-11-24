@@ -1,10 +1,11 @@
-   fastapi
-   uvicorn
-   pydantic
-   black
-   flake8
-   isort
-   sqlalchemy
-   asyncpg  # dla asynchronicznego dostępu do PostgreSQL
-   psycopg2-binary  # dla synchronizacji z PostgreSQL
-   alembic
+fastapi
+uvicorn
+pydantic
+black
+flake8
+isort
+sqlalchemy
+asyncpg
+psycopg2-binary
+alembic
+python-dotenv

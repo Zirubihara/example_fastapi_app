@@ -1,6 +1,7 @@
 from pydantic import BaseModel, field_validator
 from typing import List
 
+
 class OddNumbersResponse(BaseModel):
     odd_numbers: List[int]
 
