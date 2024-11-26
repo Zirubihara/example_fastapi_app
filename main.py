@@ -16,11 +16,11 @@ from schemas.user_response_model import (
 from schemas.odd_numbers_reponse_model import (
     OddNumbersResponse,
 )  # Updated import for Pydantic model
+from config import Config  # Importuj klasę Config
 
-load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
 
-engine = create_engine(DATABASE_URL)
+# Create engine using the configuration
+engine = create_engine(Config.DATABASE_URL)
 
 
 # Create tables

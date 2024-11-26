@@ -66,13 +66,16 @@ This is an example FastAPI application that demonstrates how to create and manag
 
 - **Endpoint**: `POST /users/`
 - **Request Body**:
+
   ```json
   {
     "name": "John Doe",
     "email": "john.doe@example.com"
   }
   ```
+
 - **Response**:
+
   ```json
   {
     "user_id": 1,
@@ -85,6 +88,7 @@ This is an example FastAPI application that demonstrates how to create and manag
 
 - **Endpoint**: `GET /users/`
 - **Response**:
+
   ```json
   [
     {
@@ -104,11 +108,70 @@ This is an example FastAPI application that demonstrates how to create and manag
 
 - **Endpoint**: `GET /odd-numbers/?start=1&end=100`
 - **Response**:
+
   ```json
   {
     "odd_numbers": [1, 3, 5, 7, 9, ..., 99]
   }
   ```
+
+## Running the Application with Makefile
+
+You can use the provided Makefile to easily manage your FastAPI application. Below are the available commands:
+
+### Commands
+
+- **Install dependencies**:
+
+  ```bash
+  make install
+  ```
+
+  This command will create a virtual environment (if it doesn't exist) and install all required packages from `requirements.txt`.
+
+- **Run the FastAPI application**:
+
+  ```bash
+  make run
+  ```
+
+  This command will start the FastAPI application using Uvicorn. You can access the application at `http://127.0.0.1:8000`.
+
+- **Run tests** (if you have a test suite):
+
+  ```bash
+  make test
+  ```
+
+  This command will discover and run tests located in the `tests` directory.
+
+- **Start Docker containers** (if using Docker):
+
+  ```bash
+  make docker-up
+  ```
+
+  This command will start the Docker containers defined in your `docker-compose.yml` file.
+
+- **Stop Docker containers**:
+
+  ```bash
+  make docker-down
+  ```
+
+  This command will stop the running Docker containers.
+
+- **Clean up**:
+
+  ```bash
+  make clean
+  ```
+
+  This command will remove the virtual environment.
+
+### Note
+
+Make sure you are in the directory where the Makefile is located before running these commands.
 
 ## License
 
