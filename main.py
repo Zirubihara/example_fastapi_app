@@ -1,23 +1,23 @@
-import os
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from middleware import add_cors_middleware
+from fastapi.responses import JSONResponse
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
-from database import (
-    SessionLocal,
+
+from config import Config
+from database import (  # Ensure you have the correct path to the database file
     Base,
-)  # Ensure you have the correct path to the database file
+    SessionLocal,
+)
 from logger import logger  # Import logger
+from middleware import add_cors_middleware
 from models.user import User  # Updated import for SQLAlchemy model
-from schemas.user_response_model import (
-    UserResponse,
-)  # Updated import for Pydantic model
 from schemas.odd_numbers_reponse_model import (
     OddNumbersResponse,
 )  # Updated import for Pydantic model
-from config import Config  # Importuj klasę Config
-
+from schemas.user_response_model import (
+    UserResponse,
+)  # Updated import for Pydantic model
+from timing_decorator import time_logger  # Importuj klasę Config
 
 # Create engine using the configuration
 engine = create_engine(Config.DATABASE_URL)
@@ -31,7 +31,20 @@ app = FastAPI()
 add_cors_middleware(app)
 
 
+@app.get("/health", response_model=dict)
+@time_logger
+async def health_check():
+    """Health check endpoint to verify the application is running.
+
+    This endpoint returns a JSON response indicating the health status.
+    Note: Using JSONResponse is optional; returning a dictionary would
+    yield the same result as FastAPI automatically converts it to JSON.
+    """
+    return JSONResponse(content={"status": "healthy"})
+
+
 @app.post("/users/", response_model=UserResponse, status_code=201)
+@time_logger
 async def create_user(name: str, email: str):
     db = SessionLocal()
     user = User(name=name, email=email)
@@ -44,6 +57,7 @@ async def create_user(name: str, email: str):
 
 
 @app.get("/users/", response_model=list[UserResponse], status_code=200)
+@time_logger
 async def get_users():
     """Returns a list of users."""
     db: Session = SessionLocal()
@@ -56,6 +70,7 @@ async def get_users():
 
 
 @app.get("/users/{user_id}", response_model=UserResponse, status_code=200)
+@time_logger
 async def get_user(user_id: int):
     """Returns a user by ID."""
     db: Session = SessionLocal()
@@ -68,6 +83,7 @@ async def get_user(user_id: int):
 
 
 @app.get("/odd-numbers/", response_model=OddNumbersResponse, status_code=200)
+@time_logger
 async def get_odd_numbers(start: int, end: int) -> OddNumbersResponse:
     """Returns odd numbers in the specified range."""
     logger.info(f"Fetching odd numbers from {start} to {end}.")  # Logging information
