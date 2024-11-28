@@ -31,7 +31,7 @@ app = FastAPI()
 add_cors_middleware(app)
 
 
-@app.get("/health", response_model=dict)
+@app.get("/health", response_model=dict[str, str])
 @time_logger
 async def health_check():
     """Health check endpoint to verify the application is running.
@@ -41,7 +41,6 @@ async def health_check():
     yield the same result as FastAPI automatically converts it to JSON.
     """
     return JSONResponse(content={"status": "healthy"})
-
 
 @app.post("/users/", response_model=UserResponse, status_code=201)
 @time_logger
@@ -104,3 +103,4 @@ async def get_odd_numbers(start: int, end: int) -> OddNumbersResponse:
         )
 
     return OddNumbersResponse(odd_numbers=odd_numbers)
+
