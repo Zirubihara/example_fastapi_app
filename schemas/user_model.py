@@ -22,7 +22,7 @@ class User(BaseModel):
     class Config:
         title = "User Model"
         description = "Model representing a user in the system."
-        json_schema_extra = {  # Updated key
+        json_schema_extra = {
             "example": {
                 "id": 1,
                 "name": "John",
