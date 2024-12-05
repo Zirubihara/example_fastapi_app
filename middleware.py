@@ -9,3 +9,4 @@ def add_cors_middleware(app):
         allow_methods=["*"],
         allow_headers=["*"],
     )
+ 

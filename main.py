@@ -42,6 +42,7 @@ async def health_check():
     """
     return JSONResponse(content={"status": "healthy"})
 
+
 @app.post("/users/", response_model=UserResponse, status_code=201)
 @time_logger
 async def create_user(name: str, email: str):
@@ -103,4 +104,3 @@ async def get_odd_numbers(start: int, end: int) -> OddNumbersResponse:
         )
 
     return OddNumbersResponse(odd_numbers=odd_numbers)
-
