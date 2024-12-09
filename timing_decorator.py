@@ -2,7 +2,6 @@ import time
 import logging
 import functools
 import inspect
-import asyncio
 
 logger = logging.getLogger(__name__)
 
