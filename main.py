@@ -1,34 +1,29 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
-
 from config import Config
-from database import (  # Ensure you have the correct path to the database file
-    Base,
-    SessionLocal,
-)
+from database import Base  # Ensure you have the correct path to the database file
 from logger import logger  # Import logger
 from middleware import add_cors_middleware
-from models.user import User  # Updated import for SQLAlchemy model
+from api.user_routes import router as user_router  # Import the user router
 from schemas.odd_numbers_reponse_model import (
     OddNumbersResponse,
 )  # Updated import for Pydantic model
-from schemas.user_response_model import (
-    UserResponse,
-)  # Updated import for Pydantic model
-from timing_decorator import time_logger  # Importuj klasę Config
+from timing_decorator import time_logger  # Import timing decorator
 
 # Create engine using the configuration
 engine = create_engine(Config.DATABASE_URL)
-
 
 # Create tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
+# Add CORS middleware
 add_cors_middleware(app)
+
+# Include the user router
+app.include_router(user_router)
 
 
 @app.get("/health", response_model=dict[str, str])
@@ -41,45 +36,6 @@ async def health_check():
     yield the same result as FastAPI automatically converts it to JSON.
     """
     return JSONResponse(content={"status": "healthy"})
-
-
-@app.post("/users/", response_model=UserResponse, status_code=201)
-@time_logger
-async def create_user(name: str, email: str):
-    db = SessionLocal()
-    user = User(name=name, email=email)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    db.close()
-    logger.info(f"Created user with ID: {user.id}")  # Logging information
-    return UserResponse(user_id=user.id, name=user.name, email=user.email)
-
-
-@app.get("/users/", response_model=list[UserResponse], status_code=200)
-@time_logger
-async def get_users():
-    """Returns a list of users."""
-    db: Session = SessionLocal()
-    users = db.query(User).all()  # Retrieve all users
-    db.close()
-    return [
-        UserResponse(user_id=user.id, name=user.name, email=user.email)
-        for user in users
-    ]
-
-
-@app.get("/users/{user_id}", response_model=UserResponse, status_code=200)
-@time_logger
-async def get_user(user_id: int):
-    """Returns a user by ID."""
-    db: Session = SessionLocal()
-    user = db.query(User).filter(User.id == user_id).first()  # Retrieve user by ID
-    db.close()
-    if user is None:
-        logger.error(f"User with ID {user_id} not found.")  # Logging error
-        raise HTTPException(status_code=404, detail="User not found")
-    return UserResponse(user_id=user.id, name=user.name, email=user.email)
 
 
 @app.get("/odd-numbers/", response_model=OddNumbersResponse, status_code=200)
