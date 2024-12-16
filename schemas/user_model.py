@@ -3,6 +3,21 @@ from config import Config  # Import the Config class
 
 
 class User(BaseModel):
+    """
+    User model representing a user in the system.
+
+    This model is used to validate and serialize user data, including
+    the user's ID, name, surname, and email address. It includes validation
+    for the email domain and ensures that the name and surname are not the same.
+
+    Attributes:
+        id (int): The unique identifier for the user.
+        name (str): The name of the user.
+        surname (str): The surname of the user.
+        email (EmailStr): The email address of the user, validated to ensure it
+                          ends with the allowed domain.
+    """
+
     id: int
     name: str
     surname: str
