@@ -6,6 +6,7 @@ from database import (
 from models.user import User
 from schemas.user_response_model import UserResponse  # Import your response model
 from logger import logger  # Import logger
+from typing import List  # Import List for response model annotation
 
 router = APIRouter()
 
@@ -13,7 +14,19 @@ router = APIRouter()
 # Example GET endpoint to retrieve users (you can modify this as needed)
 @router.get("/users/", response_model=List[UserResponse])
 async def get_users():
-    """Retrieve a list of users."""
+    """
+    Retrieve a list of all users from the database.
+
+    This endpoint fetches all user records from the database and returns them
+    as a list of `UserResponse` objects. If an error occurs during the query,
+    a 500 Internal Server Error is raised.
+
+    Returns:
+        List[UserResponse]: A list of users containing their ID, name, and email.
+
+    Raises:
+        HTTPException: If there is an error during database access or query execution.
+    """
     db: Session = SessionLocal()
     try:
         # Logic to retrieve users from the database
@@ -32,12 +45,27 @@ async def get_users():
 # Example GET endpoint to retrieve a user by ID
 @router.get("/users/{user_id}", response_model=UserResponse)
 async def get_user(user_id: int):
-    """Retrieve a user by ID."""
+    """
+    Retrieve a specific user by their ID.
+
+    This endpoint fetches a single user record from the database based on the
+    provided `user_id`. If the user is not found, a 404 Not Found error is raised.
+    Any other error results in a 500 Internal Server Error.
+
+    Args:
+        user_id (int): The ID of the user to retrieve.
+
+    Returns:
+        UserResponse: The user details containing their ID, name, and email.
+
+    Raises:
+        HTTPException: If the user is not found or there is an error during
+        database access or query execution.
+    """
     db: Session = SessionLocal()
     try:
-        user = (
-            db.query(User).filter(User.id == user_id).first()
-        )  # Replace with your actual query
+        # Query the database for the user with the given ID
+        user = db.query(User).filter(User.id == user_id).first()
         if user is None:
             raise HTTPException(status_code=404, detail="User not found")
         return UserResponse(user_id=user.id, name=user.name, email=user.email)
