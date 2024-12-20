@@ -104,6 +104,19 @@ This is an example FastAPI application that demonstrates how to create and manag
   ]
   ```
 
+### Get User by ID
+
+- **Endpoint**: `GET /users/{user_id}`
+- **Response**:
+
+  ```json
+  {
+    "user_id": 1,
+    "name": "John Doe",
+    "email": "john.doe@example.com"
+  }
+  ```
+
 ### Get Odd Numbers
 
 - **Endpoint**: `GET /odd-numbers/?start=1&end=100`
