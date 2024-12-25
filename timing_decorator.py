@@ -1,8 +1,8 @@
-import time
-import logging
 import functools
 import inspect
-from typing import Callable, Any
+import logging
+import time
+from typing import Any, Callable
 
 logger = logging.getLogger(__name__)
 
