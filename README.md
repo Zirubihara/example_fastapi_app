@@ -185,7 +185,3 @@ You can use the provided Makefile to easily manage your FastAPI application. Bel
 ### Note
 
 Make sure you are in the directory where the Makefile is located before running these commands.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
