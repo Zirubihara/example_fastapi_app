@@ -1,3 +1,11 @@
+"""
+middleware.py
+
+This module contains middleware functions for the FastAPI application.
+Currently, it includes a function to add CORS (Cross-Origin Resource Sharing)
+support to the app, allowing it to handle requests from different origins.
+"""
+
 from fastapi.middleware.cors import CORSMiddleware
 
 
