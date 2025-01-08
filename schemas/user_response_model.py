@@ -11,11 +11,13 @@ class UserResponse(BaseModel):
     Attributes:
         user_id (int): The unique identifier for the user.
         name (str): The name of the user.
+        surname (str): The surname of the user.
         email (str): The email address of the user.
     """
 
     user_id: int
     name: str
+    surname: str
     email: str
 
     class Config:
@@ -24,7 +26,8 @@ class UserResponse(BaseModel):
         json_schema_extra = {
             "example": {
                 "user_id": 1,
-                "name": "John Doe",
+                "name": "John",
+                "surname": "Doe",
                 "email": "john.doe@example.com",
             }
         }
