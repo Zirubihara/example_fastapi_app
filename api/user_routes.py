@@ -1,25 +1,37 @@
-from fastapi import APIRouter, HTTPException
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from database import (
-    SessionLocal,
-)  # Ensure you have the correct path to your database file
+
+from database import SessionLocal
+from logger import logger
 from models.user import User
-from schemas.user_response_model import UserResponse  # Import your response model
-from logger import logger  # Import logger
-from typing import List  # Import List for response model annotation
+from schemas.user_response_model import UserResponse
 
-router = APIRouter()
+router = APIRouter(tags=["Users"])
 
 
-# Example GET endpoint to retrieve users (you can modify this as needed)
-@router.get("/users/", response_model=List[UserResponse])
-async def get_users():
+# Dependency for database session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@router.get(
+    "/users/",
+    response_model=List[UserResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Get All Users",
+)
+async def get_users(db: Session = Depends(get_db)):
     """
     Retrieve a list of all users from the database.
 
     This endpoint fetches all user records from the database and returns them
-    as a list of `UserResponse` objects. If an error occurs during the query,
-    a 500 Internal Server Error is raised.
+    as a list of UserResponse objects.
 
     Returns:
         List[UserResponse]: A list of users containing their ID, name, and email.
@@ -27,50 +39,62 @@ async def get_users():
     Raises:
         HTTPException: If there is an error during database access or query execution.
     """
-    db: Session = SessionLocal()
     try:
-        # Logic to retrieve users from the database
-        users = db.query(User).all()  # Replace with your actual query
+        logger.info("Fetching all users from database")
+        users = db.query(User).all()
+        logger.info(f"Successfully retrieved {len(users)} users")
+
         return [
             UserResponse(user_id=user.id, name=user.name, email=user.email)
             for user in users
         ]
     except Exception as e:
-        logger.error(f"Error retrieving users: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-    finally:
-        db.close()
+        logger.error(f"Error retrieving users: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error while retrieving users",
+        )
 
 
-# Example GET endpoint to retrieve a user by ID
-@router.get("/users/{user_id}", response_model=UserResponse)
-async def get_user(user_id: int):
+@router.get(
+    "/users/{user_id}",
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Get User by ID",
+)
+async def get_user(user_id: int, db: Session = Depends(get_db)):
     """
     Retrieve a specific user by their ID.
 
-    This endpoint fetches a single user record from the database based on the
-    provided `user_id`. If the user is not found, a 404 Not Found error is raised.
-    Any other error results in a 500 Internal Server Error.
-
     Args:
-        user_id (int): The ID of the user to retrieve.
+        user_id (int): The ID of the user to retrieve
+        db (Session): Database session dependency
 
     Returns:
-        UserResponse: The user details containing their ID, name, and email.
+        UserResponse: The user details containing their ID, name, and email
 
     Raises:
-        HTTPException: If the user is not found or there is an error during
-        database access or query execution.
+        HTTPException: If the user is not found (404) or there is a server error (500)
     """
-    db: Session = SessionLocal()
     try:
-        # Query the database for the user with the given ID
+        logger.info(f"Attempting to fetch user with ID: {user_id}")
         user = db.query(User).filter(User.id == user_id).first()
+
         if user is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            logger.warning(f"User with ID {user_id} not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with ID {user_id} not found",
+            )
+
+        logger.info(f"Successfully retrieved user with ID: {user_id}")
         return UserResponse(user_id=user.id, name=user.name, email=user.email)
+
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error retrieving user with ID {user_id}: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
-    finally:
-        db.close()
+        logger.error(f"Error retrieving user with ID {user_id}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error while retrieving user",
+        )
