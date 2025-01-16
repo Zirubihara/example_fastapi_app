@@ -45,7 +45,12 @@ async def get_users(db: Session = Depends(get_db)):
         logger.info(f"Successfully retrieved {len(users)} users")
 
         return [
-            UserResponse(user_id=user.id, name=user.name, email=user.email)
+            UserResponse(
+                user_id=user.id,
+                name=user.name,
+                surname=user.surname,
+                email=user.email,
+            )
             for user in users
         ]
     except Exception as e:
