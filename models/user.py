@@ -1,12 +1,10 @@
 from sqlalchemy import Column, Integer, String
-
 from database import Base
 
 
 class User(Base):
     """
     User model representing a user in the system.
-
     This model defines the structure of the 'users' table in the database,
     including the user's ID, name, surname, and email address. It uses SQLAlchemy's
     ORM capabilities to map the class to the database table.

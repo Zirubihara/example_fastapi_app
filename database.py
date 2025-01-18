@@ -1,24 +1,16 @@
+# database.py
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from sqlalchemy.pool import QueuePool
+
 from config import Config
 from logger import logger
-from typing import Generator
-
 
 class Base(DeclarativeBase):
-    """Base class for SQLAlchemy models."""
-
     pass
 
-
 def create_database_engine():
-    """
-    Create and configure the SQLAlchemy engine.
-
-    Returns:
-        Engine: Configured SQLAlchemy engine
-    """
     try:
         engine = create_engine(
             Config.DATABASE_URL,
@@ -30,11 +22,9 @@ def create_database_engine():
             echo=Config.DEBUG,
         )
 
-        # Verify database connection
+        # Test connection
         with engine.connect() as connection:
-            connection.execute(
-                text("SELECT 1")
-            )  # Użyj text() do utworzenia wykonywalnego SQL
+            connection.execute(text("SELECT 1"))
             connection.commit()
             logger.info("Database connection established successfully")
 
@@ -44,21 +34,5 @@ def create_database_engine():
         logger.error(f"Failed to create database engine: {str(e)}")
         raise
 
-
-def get_db() -> Generator:
-    """Database session generator."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-# Create database engine
 engine = create_database_engine()
-
-# Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-# Initialize Base
-Base = Base()

@@ -93,7 +93,7 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
             )
 
         logger.info(f"Successfully retrieved user with ID: {user_id}")
-        return UserResponse(user_id=user.id, name=user.name, email=user.email)
+        return UserResponse(user_id=user.id, name=user.name, surname=user.surname, email=user.email)
 
     except HTTPException:
         raise
