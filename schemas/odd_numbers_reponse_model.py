@@ -1,20 +1,19 @@
-from typing import List
+from typing import List, Sequence
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class OddNumbersResponse(BaseModel):
-    """
-    Response model for odd numbers.
+    """Response model for odd numbers.
 
     This model represents a response containing a list of odd numbers.
     It validates that all numbers are odd and their sum doesn't exceed 100.
 
     Attributes:
-        odd_numbers (List[int]): A list of odd integers
+        odd_numbers: A list of odd integers
     """
 
-    odd_numbers: List[int]
+    odd_numbers: list[int]
 
     model_config = ConfigDict(
         title="Odd Numbers Response Model",
@@ -24,44 +23,48 @@ class OddNumbersResponse(BaseModel):
 
     @field_validator("odd_numbers", mode="before")
     @classmethod
-    def validate_odd_numbers(cls, v: List[int]) -> List[int]:
-        """
-        Validate that the list contains at least one odd number.
+    def validate_odd_numbers(cls, values: Sequence[int]) -> list[int]:
+        """Validate that the list contains only odd numbers.
 
         Args:
-            v (List[int]): List of numbers to validate
+            values: List of numbers to validate
 
         Returns:
-            List[int]: Validated list of odd numbers
+            The validated list of odd numbers
 
         Raises:
             ValueError: If list is empty or contains even numbers
         """
-        if not v:
+        if not values:
             raise ValueError("At least one number must be provided")
 
-        if any(num % 2 == 0 for num in v):
-            raise ValueError("All numbers must be odd")
+        even_numbers = [num for num in values if num % 2 == 0]
+        if even_numbers:
+            raise ValueError(
+                f"All numbers must be odd. Found even numbers: {even_numbers}"
+            )
 
-        return v
+        return list(values)
 
     @field_validator("odd_numbers", mode="after")
     @classmethod
-    def validate_sum_under_limit(cls, v: List[int]) -> List[int]:
-        """
-        Validate that the sum of odd numbers doesn't exceed 100.
+    def validate_sum_under_limit(
+        cls, values: Sequence[int], *, limit: int = 100
+    ) -> list[int]:
+        """Validate that the sum of odd numbers doesn't exceed the limit.
 
         Args:
-            v (List[int]): List of numbers to validate
+            values: List of numbers to validate
+            limit: Maximum allowed sum (defaults to 100)
 
         Returns:
-            List[int]: Validated list of odd numbers
+            The validated list of odd numbers
 
         Raises:
-            ValueError: If sum exceeds 100
+            ValueError: If sum exceeds the limit
         """
-        numbers_sum = sum(v)
-        if numbers_sum > 100:
-            raise ValueError(f"Sum of numbers ({numbers_sum}) must not exceed 100")
+        numbers_sum = sum(values)
+        if numbers_sum > limit:
+            raise ValueError(f"Sum of numbers ({numbers_sum}) must not exceed {limit}")
 
-        return v
+        return list(values)

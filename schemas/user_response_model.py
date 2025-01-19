@@ -1,18 +1,20 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
+from dataclasses import dataclass
+from typing import Dict
+
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class UserResponse(BaseModel):
-    """
-    Response model for user data.
+    """Response model for user data.
 
     This model represents the response returned when a user is created
     or retrieved from the system.
 
     Attributes:
-        user_id (int): Unique identifier for the user
-        name (str): User's first name
-        surname (str): User's surname
-        email (EmailStr): User's email address
+        user_id: Unique identifier for the user
+        name: User's first name
+        surname: User's surname
+        email: User's email address
     """
 
     user_id: int
@@ -33,21 +35,20 @@ class UserResponse(BaseModel):
         },
     )
 
+    @property
     def full_name(self) -> str:
-        """
-        Get user's full name.
+        """Get user's full name.
 
         Returns:
-            str: User's full name (name + surname)
+            The user's full name (name + surname)
         """
         return f"{self.name} {self.surname}"
 
-    def to_public_dict(self) -> dict:
-        """
-        Convert user data to a dictionary, excluding sensitive information.
+    def to_public_dict(self) -> Dict[str, str | int]:
+        """Convert user data to a dictionary, excluding sensitive information.
 
         Returns:
-            dict: Public user information
+            A dictionary containing public user information
         """
         return {
             "user_id": self.user_id,
