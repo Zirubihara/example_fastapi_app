@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from timing_decorator import time_logger
 
-router = APIRouter(tags=["Health"])  # Dodajemy tag dla lepszej dokumentacji
+router = APIRouter(tags=["Health"])
 
 
 @router.get(
