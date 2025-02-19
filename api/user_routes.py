@@ -8,7 +8,7 @@ from database import SessionLocal
 from logger import logger
 from models.user import User
 from schemas.user_response_model import UserResponse
-from user_exceptions import UserNotFoundError, UserDatabaseError
+from user_exceptions import UserDatabaseError, UserNotFoundError
 
 router = APIRouter(tags=["Users"])
 
