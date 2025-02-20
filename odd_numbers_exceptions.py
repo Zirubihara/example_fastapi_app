@@ -1,6 +1,3 @@
-# odd_numbers_exceptions.py
-
-
 class OddNumbersError(Exception):
     """Base exception for errors related to odd numbers endpoint."""
 
