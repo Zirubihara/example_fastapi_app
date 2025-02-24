@@ -20,4 +20,5 @@ async def health_check():
     Returns:
         dict: Status information about the application
     """
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"status": "healthy"})
+    status_content = {"status": "healthy"}  # Store the response content in a variable
+    return JSONResponse(status_code=status.HTTP_200_OK, content=status_content)
