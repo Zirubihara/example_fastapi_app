@@ -1,14 +1,16 @@
 # database.py
 
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 from sqlalchemy.pool import QueuePool
 
 from config import Config
 from logger import logger
 
+
 class Base(DeclarativeBase):
     pass
+
 
 def create_database_engine():
     try:
@@ -33,6 +35,7 @@ def create_database_engine():
     except Exception as e:
         logger.error(f"Failed to create database engine: {str(e)}")
         raise
+
 
 engine = create_database_engine()
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
