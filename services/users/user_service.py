@@ -1,14 +1,16 @@
 from typing import Optional
 
-from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from exceptions import UserCreationError, UserDatabaseError, UserIntegrityError
+from exceptions.base import AppError
+from exceptions.database import DatabaseError
+from exceptions.user import UserAlreadyExistsError, UserValidationError
 from logger import logger
 from models.user import User
 
 
-def create_user(db: Session, name: str, surname: str, email: str) -> Optional[User]:
+def create_user(db: Session, name: str, surname: str, email: str) -> User | None:
     """
     Create a new user in the database.
 
@@ -19,15 +21,21 @@ def create_user(db: Session, name: str, surname: str, email: str) -> Optional[Us
         email (str): User's email address.
 
     Returns:
-        Optional[User]: The created user object or None if the creation failed.
+        Optional[User]: The created user object.
 
     Raises:
-        UserIntegrityError: If there is an integrity constraint violation.
-        UserDatabaseError: If there is a database error.
-        UserCreationError: If an unexpected error occurs.
+        UserValidationError: If input data is invalid.
+        UserAlreadyExistsError: If user with email already exists.
+        DatabaseError: If there is a database error.
     """
     try:
-        logger.info(f"Attempting to create user with email: {email}")
+        # Validate input data
+        if not name or not name.isalpha():
+            raise UserValidationError("name", "Must contain only letters")
+        if not surname or not surname.isalpha():
+            raise UserValidationError("surname", "Must contain only letters")
+        if not email or "@" not in email:
+            raise UserValidationError("email", "Invalid email format")
 
         user = User(name=name, surname=surname, email=email)
         db.add(user)
@@ -37,23 +45,15 @@ def create_user(db: Session, name: str, surname: str, email: str) -> Optional[Us
         logger.info(f"User created successfully with ID: {user.id}")
         return user
 
-    except IntegrityError as e:
-        db.rollback()
-        logger.error(
-            f"Integrity error while creating user with email {email}: {str(e)}"
-        )
-        raise UserIntegrityError(
-            "Failed to create user due to an integrity constraint violation."
-        ) from e
-
     except SQLAlchemyError as e:
         db.rollback()
+        if "unique constraint" in str(e).lower():
+            logger.warning(f"Attempt to create duplicate user with email: {email}")
+            raise UserAlreadyExistsError(email)
         logger.error(f"Database error while creating user: {str(e)}")
-        raise UserDatabaseError("Failed to create user due to a database error.") from e
+        raise DatabaseError("Failed to create user") from e
 
     except Exception as e:
         db.rollback()
         logger.error(f"Unexpected error while creating user: {str(e)}")
-        raise UserCreationError(
-            "An unexpected error occurred during user creation."
-        ) from e
+        raise AppError(f"Failed to create user: {str(e)}") from e

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
+from exceptions import HealthCheckError
 from timing_decorator import time_logger
 
 router = APIRouter(tags=["Health"])
@@ -19,6 +20,12 @@ async def health_check():
 
     Returns:
         dict: Status information about the application
+
+    Raises:
+        HealthCheckError: If the health check fails
     """
-    status_content = {"status": "healthy"}  # Store the response content in a variable
-    return JSONResponse(status_code=status.HTTP_200_OK, content=status_content)
+    try:
+        status_content = {"status": "healthy"}
+        return JSONResponse(status_code=status.HTTP_200_OK, content=status_content)
+    except Exception as e:
+        raise HealthCheckError(f"Health check failed: {str(e)}")
