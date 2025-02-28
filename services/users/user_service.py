@@ -1,5 +1,3 @@
-from typing import Optional
-
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -21,7 +19,7 @@ def create_user(db: Session, name: str, surname: str, email: str) -> User | None
         email (str): User's email address.
 
     Returns:
-        Optional[User]: The created user object.
+        User | None: The created user object or None if creation fails.
 
     Raises:
         UserValidationError: If input data is invalid.
