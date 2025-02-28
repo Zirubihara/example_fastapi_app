@@ -1,3 +1,5 @@
+import re
+
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -6,6 +8,28 @@ from exceptions.database import DatabaseError
 from exceptions.user import UserAlreadyExistsError, UserValidationError
 from logger import logger
 from models.user import User
+
+EMAIL_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+
+
+def _validate_user_data(name: str, surname: str, email: str) -> None:
+    """
+    Validate user input data.
+
+    Args:
+        name (str): User's first name
+        surname (str): User's surname
+        email (str): User's email address
+
+    Raises:
+        UserValidationError: If any of the input data is invalid
+    """
+    if not name or not name.isalpha():
+        raise UserValidationError("name", "Must contain only letters")
+    if not surname or not surname.isalpha():
+        raise UserValidationError("surname", "Must contain only letters")
+    if not email or not re.match(EMAIL_PATTERN, email):
+        raise UserValidationError("email", "Invalid email format")
 
 
 def create_user(db: Session, name: str, surname: str, email: str) -> User | None:
@@ -27,13 +51,7 @@ def create_user(db: Session, name: str, surname: str, email: str) -> User | None
         DatabaseError: If there is a database error.
     """
     try:
-        # Validate input data
-        if not name or not name.isalpha():
-            raise UserValidationError("name", "Must contain only letters")
-        if not surname or not surname.isalpha():
-            raise UserValidationError("surname", "Must contain only letters")
-        if not email or "@" not in email:
-            raise UserValidationError("email", "Invalid email format")
+        _validate_user_data(name, surname, email)
 
         user = User(name=name, surname=surname, email=email)
         db.add(user)

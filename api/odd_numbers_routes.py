@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, status
 
+from exceptions import InvalidRangeError, SumExceedsLimitError
 from logger import logger
 from schemas.odd_numbers_reponse_model import OddNumbersResponse
 from timing_decorator import time_logger
@@ -27,22 +28,21 @@ async def get_odd_numbers(start: int, end: int) -> OddNumbersResponse:
         OddNumbersResponse: List of odd numbers in the specified range
 
     Raises:
-        HTTPException: If start > end or if sum of odd numbers > 100
+        InvalidRangeError: If start > end
+        SumExceedsLimitError: If sum of odd numbers > 100
     """
     logger.info(f"Fetching odd numbers from {start} to {end}")
 
     if start > end:
-        error_msg = f"Start ({start}) must be less than or equal to end ({end})"
-        logger.error(error_msg)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg)
+        logger.error(f"Invalid range: start ({start}) > end ({end})")
+        raise InvalidRangeError(start, end)
 
     odd_numbers = [num for num in range(start, end + 1) if num % 2 != 0]
     numbers_sum = sum(odd_numbers)
 
     if numbers_sum > 100:
-        error_msg = f"Sum of odd numbers ({numbers_sum}) exceeds 100"
-        logger.error(error_msg)
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg)
+        logger.error(f"Sum ({numbers_sum}) exceeds limit of 100")
+        raise SumExceedsLimitError(numbers_sum)
 
     logger.info(f"Found {len(odd_numbers)} odd numbers with sum {numbers_sum}")
     return OddNumbersResponse(odd_numbers=odd_numbers)
