@@ -1,25 +1,21 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Request, status
+from fastapi import APIRouter, Depends, Request, status, Security
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
-from database import SessionLocal
-from logger import logger
-from models.user import User
-from schemas.user_response_model import UserResponse
-from user_exceptions import UserDatabaseError, UserNotFoundError
+from app.core.database import get_db
+from app.core.logger import logger
+from app.exceptions import UserDatabaseError, UserNotFoundError
+from app.models.user import User
+from app.schemas.responses.user import UserResponse
+from app.schemas.requests.user import UserCreate
+from app.services.users import create_user
+from app.utils.timing_decorator import time_logger
+from app.api.deps import get_current_admin_user, get_current_active_user
+from app.schemas.user import UserUpdate
 
 router = APIRouter(tags=["Users"])
-
-
-# Dependency for database session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 # Exception Handlers
@@ -115,3 +111,64 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
     except Exception as e:
         logger.error(f"Error retrieving user with ID {user_id}: {str(e)}")
         raise UserDatabaseError() from e
+
+
+@router.post(
+    "/users/",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create User",
+)
+@time_logger
+async def create_user_endpoint(
+    user: UserCreate,
+    db: Session = Depends(get_db),
+) -> UserResponse:
+    """
+    Create a new user.
+
+    Args:
+        user: User data
+        db: Database session
+
+    Returns:
+        UserResponse: Created user data
+    """
+    return create_user(db=db, name=user.name, surname=user.surname, email=user.email)
+
+
+@router.get("/me", response_model=UserResponse)
+async def read_user_me(
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """Get current user."""
+    return current_user
+
+
+@router.put("/me", response_model=UserResponse)
+async def update_user_me(
+    *,
+    db: Session = Depends(get_db),
+    user_in: UserUpdate,
+    current_user: User = Depends(get_current_active_user),
+) -> User:
+    """Update current user."""
+    user = current_user
+    for field, value in user_in.dict(exclude_unset=True).items():
+        setattr(user, field, value)
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.get("/", response_model=List[UserResponse])
+async def read_users(
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Security(get_current_admin_user),
+) -> List[User]:
+    """Get all users. Admin only."""
+    users = db.query(User).offset(skip).limit(limit).all()
+    return users

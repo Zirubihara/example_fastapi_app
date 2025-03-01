@@ -1,10 +1,10 @@
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 
-from exceptions import HealthCheckError
-from timing_decorator import time_logger
+from app.exceptions import HealthCheckError
+from app.utils.timing_decorator import time_logger
 
-router = APIRouter(tags=["Health"])
+router = APIRouter()
 
 
 @router.get(

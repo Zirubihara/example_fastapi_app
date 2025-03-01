@@ -1,31 +1,31 @@
 from fastapi import FastAPI
-from sqlalchemy import create_engine
+from fastapi.middleware.cors import CORSMiddleware
 
-from api.health_routes import router as health_router
-from api.odd_numbers_routes import router as odd_numbers_router
-from api.user_routes import router as user_router
-from config import Config
-from database import Base
-from logger import logger
-from middleware import add_cors_middleware
+from app.api.v1.router import api_router
+from app.core.config import settings
+from app.core.middleware import add_process_time_header, RateLimitMiddleware
 
-app = FastAPI()
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description=settings.DESCRIPTION,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+)
 
-try:
-    logger.info("Initializing database connection...")
-    engine = create_engine(Config.DATABASE_URL)
-    Base.metadata.create_all(bind=engine)
-    logger.info("Database initialized successfully")
-except Exception as e:
-    logger.error(f"Database initialization failed: {e}")
-    raise
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-logger.info("Adding CORS middleware")
-add_cors_middleware(app)
+# Add custom middleware
+app.middleware("http")(add_process_time_header)
 
-logger.info("Including routers")
-app.include_router(user_router, prefix="/users")
-app.include_router(health_router, prefix="/health")
-app.include_router(odd_numbers_router, prefix="/odd-numbers")
+# Add rate limiting middleware
+app.add_middleware(RateLimitMiddleware)
 
-logger.info("Application startup complete")
+# Include API router
+app.include_router(api_router, prefix=settings.API_V1_STR)

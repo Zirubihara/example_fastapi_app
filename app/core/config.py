@@ -1,8 +1,9 @@
 import os
 from logging import INFO, WARNING
-from typing import Final
+from typing import Final, List
 
 from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
 
 # Load environment variables from .env file
 load_dotenv()
@@ -36,6 +37,9 @@ class BaseConfig:
     # Logging settings
     LOG_LEVEL: Final = INFO
     LOG_FORMAT: Final = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+    # CORS settings
+    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
 
     @classmethod
     def validate(cls) -> None:
@@ -115,3 +119,26 @@ def get_config():
 
 # Create configuration instance
 Config = get_config()
+
+
+class Settings(BaseSettings):
+    PROJECT_NAME: str = "FastAPI Example App"
+    VERSION: str = "1.0.0"
+    DESCRIPTION: str = "A FastAPI example application"
+    API_V1_STR: str = "/api/v1"
+    
+    # JWT Settings
+    SECRET_KEY: str = "your-secret-key"  # Change this in production!
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
+    # Database
+    DATABASE_URL: str
+    
+    # CORS
+    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    
+    class Config:
+        env_file = ".env"
+
+settings = Settings()

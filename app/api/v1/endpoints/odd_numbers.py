@@ -1,11 +1,11 @@
 from fastapi import APIRouter, status
 
-from exceptions import InvalidRangeError, SumExceedsLimitError
-from logger import logger
-from schemas.odd_numbers_reponse_model import OddNumbersResponse
-from timing_decorator import time_logger
+from app.exceptions import InvalidRangeError, SumExceedsLimitError
+from app.schemas.responses.odd_numbers import OddNumbersResponse
+from app.utils.timing_decorator import time_logger
+from app.core.logger import logger
 
-router = APIRouter(tags=["Odd Numbers"])
+router = APIRouter()
 
 
 @router.get(
