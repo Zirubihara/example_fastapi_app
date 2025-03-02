@@ -3,7 +3,7 @@ from typing import Any
 from pydantic import (BaseModel, ConfigDict, EmailStr, field_validator,
                       model_validator)
 
-from config import Config
+from app.core.config import settings
 
 
 class User(BaseModel):
@@ -92,9 +92,9 @@ class User(BaseModel):
         Raises:
             ValueError: If email domain is not in allowed list
         """
-        if not value.endswith(Config.ALLOWED_EMAIL_DOMAIN):
+        if not value.endswith(settings.ALLOWED_EMAIL_DOMAIN):
             raise ValueError(
-                f"Email must end with {Config.ALLOWED_EMAIL_DOMAIN}, got {value}"
+                f"Email must end with {settings.ALLOWED_EMAIL_DOMAIN}, got {value}"
             )
         return value
 

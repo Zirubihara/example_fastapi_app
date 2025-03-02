@@ -1,24 +1,29 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, constr
+from pydantic import BaseModel, EmailStr
 
-from app.models.user import UserRole
 
 class UserBase(BaseModel):
-    email: EmailStr
-    name: constr(min_length=2, max_length=50)
-    surname: constr(min_length=2, max_length=50)
+    email: Optional[EmailStr] = None
+    is_active: Optional[bool] = True
+    name: Optional[str] = None
+    surname: Optional[str] = None
+
 
 class UserCreate(UserBase):
-    password: constr(min_length=8)
-    role: Optional[UserRole] = UserRole.USER
+    email: EmailStr
+    password: str
+    name: str
+    surname: str
+
 
 class UserUpdate(UserBase):
-    password: Optional[constr(min_length=8)] = None
+    password: Optional[str] = None
 
-class UserResponse(UserBase):
+
+class User(UserBase):
     id: int
-    role: UserRole
     is_active: bool
+    is_superuser: bool = False
 
     class Config:
         from_attributes = True 

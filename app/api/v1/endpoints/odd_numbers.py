@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Path
 
 from app.exceptions import InvalidRangeError, SumExceedsLimitError
 from app.schemas.responses.odd_numbers import OddNumbersResponse
@@ -46,3 +46,10 @@ async def get_odd_numbers(start: int, end: int) -> OddNumbersResponse:
 
     logger.info(f"Found {len(odd_numbers)} odd numbers with sum {numbers_sum}")
     return OddNumbersResponse(odd_numbers=odd_numbers)
+
+
+@router.get("/check/{number}")
+async def check_odd_number(
+    number: int = Path(..., description="Number to check")
+):
+    return {"number": number, "is_odd": number % 2 != 0}

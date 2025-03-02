@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Request, status, Security
+from fastapi import APIRouter, Depends, Request, status, Security, HTTPException
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,7 @@ from app.services.users import create_user
 from app.utils.timing_decorator import time_logger
 from app.api.deps import get_current_admin_user, get_current_active_user
 from app.schemas.user import UserUpdate
+from app.crud import crud_user
 
 router = APIRouter(tags=["Users"])
 
@@ -134,7 +135,13 @@ async def create_user_endpoint(
     Returns:
         UserResponse: Created user data
     """
-    return create_user(db=db, name=user.name, surname=user.surname, email=user.email)
+    user = crud_user.get_by_email(db, email=user.email)
+    if user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
+    return crud_user.create(db, obj_in=user)
 
 
 @router.get("/me", response_model=UserResponse)
@@ -170,5 +177,51 @@ async def read_users(
     current_user: User = Security(get_current_admin_user),
 ) -> List[User]:
     """Get all users. Admin only."""
-    users = db.query(User).offset(skip).limit(limit).all()
-    return users
+    return crud_user.get_multi(db, skip=skip, limit=limit)
+
+
+@router.get("/{user_id}", response_model=UserResponse)
+async def read_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """Get user by ID."""
+    user = crud_user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    return user
+
+
+@router.put("/{user_id}", response_model=UserResponse)
+async def update_user(
+    user_id: int,
+    user_in: UserUpdate,
+    db: Session = Depends(get_db),
+):
+    """Update user."""
+    user = crud_user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    return crud_user.update(db, db_obj=user, obj_in=user_in)
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+):
+    """Delete user."""
+    user = crud_user.get(db, id=user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    crud_user.remove(db, id=user_id)
+    return None
