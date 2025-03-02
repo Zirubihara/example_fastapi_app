@@ -6,55 +6,20 @@ from pydantic import (BaseModel, ConfigDict, EmailStr, field_validator,
 from app.core.config import settings
 
 
-class User(BaseModel):
-    """User model representing a user in the system.
+class UserBase(BaseModel):
+    """Base user model with common attributes.
 
-    This model validates and serializes user data, including ID, name,
-    surname, and email address. It ensures the email domain is allowed
-    and that name differs from surname.
+    This model contains fields that are common between different user models
+    (create, update, response).
 
     Attributes:
-        id: Unique identifier for the user
         name: User's first name
         surname: User's surname
         email: User's email address with domain validation
     """
-
-    id: int
     name: str
     surname: str
     email: EmailStr
-
-    model_config = ConfigDict(
-        title="User Model",
-        description="Model representing a user in the system.",
-        json_schema_extra={
-            "example": {
-                "id": 1,
-                "name": "John",
-                "surname": "Doe",
-                "email": "john.doe@gmail.com",
-            }
-        },
-    )
-
-    @field_validator("id")
-    @classmethod
-    def validate_id(cls, value: int) -> int:
-        """Validate user ID is positive.
-
-        Args:
-            value: ID to validate
-
-        Returns:
-            The validated ID
-
-        Raises:
-            ValueError: If ID is not positive
-        """
-        if value <= 0:
-            raise ValueError("ID must be a positive integer")
-        return value
 
     @field_validator("name", "surname")
     @classmethod
@@ -96,6 +61,95 @@ class User(BaseModel):
             raise ValueError(
                 f"Email must end with {settings.ALLOWED_EMAIL_DOMAIN}, got {value}"
             )
+        return value
+
+
+class UserCreate(UserBase):
+    """User creation model.
+
+    This model is used when creating a new user. It extends UserBase
+    and adds password field.
+
+    Attributes:
+        password: User's password (will be hashed before storage)
+    """
+    password: str
+
+    model_config = ConfigDict(
+        title="User Creation Model",
+        description="Model for creating new users.",
+        json_schema_extra={
+            "example": {
+                "name": "John",
+                "surname": "Doe",
+                "email": "john.doe@gmail.com",
+                "password": "strongpassword123",
+            }
+        },
+    )
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, value: str) -> str:
+        """Validate password length and complexity.
+
+        Args:
+            value: Password to validate
+
+        Returns:
+            The validated password
+
+        Raises:
+            ValueError: If password is too short
+        """
+        if len(value) < settings.PASSWORD_MIN_LENGTH:
+            raise ValueError(
+                "Password must be at least "
+                f"{settings.PASSWORD_MIN_LENGTH} characters long"
+            )
+        return value
+
+
+class User(UserBase):
+    """User model representing a user in the system.
+
+    This model extends UserBase and adds an ID field. It's used for
+    representing existing users in the system.
+
+    Attributes:
+        id: Unique identifier for the user
+    """
+    id: int
+
+    model_config = ConfigDict(
+        title="User Model",
+        description="Model representing a user in the system.",
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "name": "John",
+                "surname": "Doe",
+                "email": "john.doe@gmail.com",
+            }
+        },
+    )
+
+    @field_validator("id")
+    @classmethod
+    def validate_id(cls, value: int) -> int:
+        """Validate user ID is positive.
+
+        Args:
+            value: ID to validate
+
+        Returns:
+            The validated ID
+
+        Raises:
+            ValueError: If ID is not positive
+        """
+        if value <= 0:
+            raise ValueError("ID must be a positive integer")
         return value
 
     @model_validator(mode="after")

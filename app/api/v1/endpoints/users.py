@@ -1,88 +1,73 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, Request, status, Security, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, status, Security, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.logger import logger
 from app.exceptions import UserDatabaseError, UserNotFoundError
 from app.models.user import User
-from app.schemas.responses.user import UserResponse
-from app.schemas.requests.user import UserCreate
-from app.services.users import create_user
-from app.utils.timing_decorator import time_logger
-from app.api.deps import get_current_admin_user, get_current_active_user
-from app.schemas.user import UserUpdate
+from app.schemas.user import UserCreate, UserResponse, UserUpdate
 from app.crud import crud_user
+from app.api.deps import get_current_admin_user, get_current_active_user
+from app.utils.timing_decorator import time_logger
 
 router = APIRouter(tags=["Users"])
 
 
-# Exception Handlers
-@router.exception_handler(UserNotFoundError)
-async def user_not_found_exception_handler(request: Request, exc: UserNotFoundError):
-    return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
-        content={"detail": exc.message},
-    )
-
-
-@router.exception_handler(UserDatabaseError)
-async def user_database_exception_handler(request: Request, exc: UserDatabaseError):
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"detail": exc.message},
-    )
-
-
 @router.get(
-    "/users/",
+    "/",
     response_model=List[UserResponse],
     status_code=status.HTTP_200_OK,
     summary="Get All Users",
 )
-async def get_users(db: Session = Depends(get_db)):
+@time_logger
+async def get_users(
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: User = Security(get_current_admin_user),
+) -> List[UserResponse]:
     """
-    Retrieve a list of all users from the database.
+    Retrieve a list of all users from the database. Admin only.
+
+    Args:
+        db: Database session
+        skip: Number of records to skip
+        limit: Maximum number of records to return
+        current_user: Current admin user
 
     Returns:
-        List[UserResponse]: A list of users containing their ID, name, surname, and email.
+        List[UserResponse]: A list of users containing their ID, name, surname,
+        and email.
 
     Raises:
         UserDatabaseError: If there is an error during database access.
     """
     try:
-        logger.info("Fetching all users from database")
-        users = db.query(User).all()
+        logger.info("Fetching users from database")
+        users = crud_user.get_multi(db, skip=skip, limit=limit)
         logger.info(f"Successfully retrieved {len(users)} users")
-
-        return [
-            UserResponse(
-                user_id=user.id,
-                name=user.name,
-                surname=user.surname,
-                email=user.email,
-            )
-            for user in users
-        ]
+        return users
     except Exception as e:
         logger.error(f"Error retrieving users: {str(e)}")
         raise UserDatabaseError() from e
 
 
 @router.get(
-    "/users/{user_id}",
+    "/{user_id}",
     response_model=UserResponse,
     status_code=status.HTTP_200_OK,
     summary="Get User by ID",
 )
-async def get_user(user_id: int, db: Session = Depends(get_db)):
+@time_logger
+async def get_user(user_id: int, db: Session = Depends(get_db)) -> UserResponse:
     """
     Retrieve a specific user by their ID.
 
     Args:
-        user_id (int): The ID of the user to retrieve.
+        user_id: The ID of the user to retrieve
+        db: Database session
 
     Returns:
         UserResponse: The user details containing their ID, name, surname, and email.
@@ -93,19 +78,14 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
     """
     try:
         logger.info(f"Attempting to fetch user with ID: {user_id}")
-        user = db.query(User).filter(User.id == user_id).first()
+        user = crud_user.get(db, id=user_id)
 
-        if user is None:
+        if not user:
             logger.warning(f"User with ID {user_id} not found")
             raise UserNotFoundError(user_id)
 
         logger.info(f"Successfully retrieved user with ID: {user_id}")
-        return UserResponse(
-            user_id=user.id,
-            name=user.name,
-            surname=user.surname,
-            email=user.email,
-        )
+        return user
 
     except UserNotFoundError:
         raise
@@ -115,7 +95,7 @@ async def get_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.post(
-    "/users/",
+    "/",
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Create User",
@@ -134,9 +114,12 @@ async def create_user_endpoint(
 
     Returns:
         UserResponse: Created user data
+
+    Raises:
+        HTTPException: If email is already registered
     """
-    user = crud_user.get_by_email(db, email=user.email)
-    if user:
+    existing_user = crud_user.get_by_email(db, email=user.email)
+    if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already registered",
@@ -144,64 +127,80 @@ async def create_user_endpoint(
     return crud_user.create(db, obj_in=user)
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get(
+    "/me",
+    response_model=UserResponse,
+    summary="Get Current User",
+)
+@time_logger
 async def read_user_me(
     current_user: User = Depends(get_current_active_user),
-) -> User:
-    """Get current user."""
+) -> UserResponse:
+    """
+    Get current user.
+
+    Args:
+        current_user: Current authenticated user
+
+    Returns:
+        UserResponse: Current user data
+    """
     return current_user
 
 
-@router.put("/me", response_model=UserResponse)
+@router.put(
+    "/me",
+    response_model=UserResponse,
+    summary="Update Current User",
+)
+@time_logger
 async def update_user_me(
     *,
     db: Session = Depends(get_db),
     user_in: UserUpdate,
     current_user: User = Depends(get_current_active_user),
-) -> User:
-    """Update current user."""
-    user = current_user
-    for field, value in user_in.dict(exclude_unset=True).items():
-        setattr(user, field, value)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
+) -> UserResponse:
+    """
+    Update current user.
+
+    Args:
+        db: Database session
+        user_in: User update data
+        current_user: Current authenticated user
+
+    Returns:
+        UserResponse: Updated user data
+    """
+    return crud_user.update(db, db_obj=current_user, obj_in=user_in)
 
 
-@router.get("/", response_model=List[UserResponse])
-async def read_users(
-    db: Session = Depends(get_db),
-    skip: int = 0,
-    limit: int = 100,
-    current_user: User = Security(get_current_admin_user),
-) -> List[User]:
-    """Get all users. Admin only."""
-    return crud_user.get_multi(db, skip=skip, limit=limit)
-
-
-@router.get("/{user_id}", response_model=UserResponse)
-async def read_user(
-    user_id: int,
-    db: Session = Depends(get_db),
-):
-    """Get user by ID."""
-    user = crud_user.get(db, id=user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-    return user
-
-
-@router.put("/{user_id}", response_model=UserResponse)
+@router.put(
+    "/{user_id}",
+    response_model=UserResponse,
+    summary="Update User",
+)
+@time_logger
 async def update_user(
     user_id: int,
     user_in: UserUpdate,
     db: Session = Depends(get_db),
-):
-    """Update user."""
+    current_user: User = Security(get_current_admin_user),
+) -> UserResponse:
+    """
+    Update user. Admin only.
+
+    Args:
+        user_id: ID of the user to update
+        user_in: User update data
+        db: Database session
+        current_user: Current admin user
+
+    Returns:
+        UserResponse: Updated user data
+
+    Raises:
+        HTTPException: If user is not found
+    """
     user = crud_user.get(db, id=user_id)
     if not user:
         raise HTTPException(
@@ -211,12 +210,28 @@ async def update_user(
     return crud_user.update(db, db_obj=user, obj_in=user_in)
 
 
-@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{user_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete User",
+)
+@time_logger
 async def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
-):
-    """Delete user."""
+    current_user: User = Security(get_current_admin_user),
+) -> None:
+    """
+    Delete user. Admin only.
+
+    Args:
+        user_id: ID of the user to delete
+        db: Database session
+        current_user: Current admin user
+
+    Raises:
+        HTTPException: If user is not found
+    """
     user = crud_user.get(db, id=user_id)
     if not user:
         raise HTTPException(
@@ -224,4 +239,3 @@ async def delete_user(
             detail="User not found",
         )
     crud_user.remove(db, id=user_id)
-    return None
