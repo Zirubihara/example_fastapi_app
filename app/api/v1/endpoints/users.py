@@ -1,15 +1,15 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, status, Security, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Security, status
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_active_user, get_current_admin_user
 from app.core.database import get_db
 from app.core.logger import logger
+from app.crud import crud_user
 from app.exceptions import UserDatabaseError, UserNotFoundError
 from app.models.user import User
 from app.schemas.user import UserCreate, UserResponse, UserUpdate
-from app.crud import crud_user
-from app.api.deps import get_current_admin_user, get_current_active_user
 from app.utils.timing_decorator import time_logger
 
 router = APIRouter(tags=["Users"])

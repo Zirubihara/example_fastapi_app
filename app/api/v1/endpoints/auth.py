@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -14,6 +14,7 @@ from app.schemas.token import Token
 from app.schemas.user import UserCreate, UserResponse
 
 router = APIRouter()
+
 
 @router.post("/login", response_model=Token)
 async def login(
@@ -41,6 +42,7 @@ async def login(
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+
 @router.post("/register", response_model=UserResponse)
 async def register(
     *,
@@ -54,7 +56,7 @@ async def register(
             status_code=400,
             detail="The user with this email already exists in the system",
         )
-    
+
     user = User(
         email=user_in.email,
         hashed_password=security.get_password_hash(user_in.password),
@@ -67,7 +69,8 @@ async def register(
     db.refresh(user)
     return user
 
+
 @router.post("/test-token", response_model=UserResponse)
 async def test_token(current_user: User = Depends(deps.get_current_user)) -> Any:
     """Test access token."""
-    return current_user 
+    return current_user

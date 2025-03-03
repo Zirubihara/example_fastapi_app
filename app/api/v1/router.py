@@ -31,4 +31,4 @@ api_router.include_router(
     prefix="/users",
     tags=["Users"],
     responses={404: {"description": "Not found"}},
-) 
+)

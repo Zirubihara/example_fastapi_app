@@ -1,9 +1,9 @@
-from fastapi import APIRouter, status, Path
+from fastapi import APIRouter, Path, status
 
+from app.core.logger import logger
 from app.exceptions import InvalidRangeError, SumExceedsLimitError
 from app.schemas.responses.odd_numbers import OddNumbersResponse
 from app.utils.timing_decorator import time_logger
-from app.core.logger import logger
 
 router = APIRouter()
 
@@ -49,7 +49,5 @@ async def get_odd_numbers(start: int, end: int) -> OddNumbersResponse:
 
 
 @router.get("/check/{number}")
-async def check_odd_number(
-    number: int = Path(..., description="Number to check")
-):
+async def check_odd_number(number: int = Path(..., description="Number to check")):
     return {"number": number, "is_odd": number % 2 != 0}
