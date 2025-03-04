@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Path, status
 
 from app.core.logger import logger
-from app.exceptions import InvalidRangeError, SumExceedsLimitError
+from app.exceptions.custom_exceptions import InvalidRangeError, SumExceedsLimitError
 from app.schemas.responses.odd_numbers import OddNumbersResponse
 from app.utils.timing_decorator import time_logger
 
