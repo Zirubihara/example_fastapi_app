@@ -1,13 +1,12 @@
 import re
 
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
-
 from exceptions.base import AppError
 from exceptions.database import DatabaseError
 from exceptions.user import UserAlreadyExistsError, UserValidationError
 from logger import logger
 from models.user import User
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
 EMAIL_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 

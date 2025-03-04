@@ -6,7 +6,6 @@ from app.api.v1.api import api_router
 from app.core.config import settings
 from app.exceptions import UserDatabaseError, UserNotFoundError
 
-
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
@@ -51,5 +50,5 @@ async def root():
         "message": "Welcome to FastAPI Example App",
         "version": settings.VERSION,
         "docs_url": "/docs",
-        "redoc_url": "/redoc"
-    } 
+        "redoc_url": "/redoc",
+    }

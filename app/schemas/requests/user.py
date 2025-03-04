@@ -17,6 +17,7 @@ class UserBase(BaseModel):
         surname: User's surname
         email: User's email address with domain validation
     """
+
     name: str
     surname: str
     email: EmailStr
@@ -73,6 +74,7 @@ class UserCreate(UserBase):
     Attributes:
         password: User's password (will be hashed before storage)
     """
+
     password: str
 
     model_config = ConfigDict(
@@ -119,6 +121,7 @@ class User(UserBase):
     Attributes:
         id: Unique identifier for the user
     """
+
     id: int
 
     model_config = ConfigDict(

@@ -1,5 +1,7 @@
 from typing import Optional
-from pydantic import BaseModel, EmailStr, ConfigDict, field_validator, model_validator
+
+from pydantic import (BaseModel, ConfigDict, EmailStr, field_validator,
+                      model_validator)
 
 from app.core.config import settings
 
@@ -16,6 +18,7 @@ class UserBase(BaseModel):
         email: User's email address with domain validation
         is_active: Whether the user account is active
     """
+
     name: str
     surname: str
     email: EmailStr
@@ -72,6 +75,7 @@ class UserCreate(UserBase):
     Attributes:
         password: User's password (will be hashed before storage)
     """
+
     password: str
 
     model_config = ConfigDict(
@@ -122,6 +126,7 @@ class UserUpdate(UserBase):
         password: Optional new password
         is_active: Optional new active status
     """
+
     name: Optional[str] = None
     surname: Optional[str] = None
     email: Optional[EmailStr] = None
@@ -151,6 +156,7 @@ class UserResponse(UserBase):
         id: Unique identifier for the user
         is_superuser: Whether the user has admin privileges
     """
+
     id: int
     is_superuser: bool = False
 
@@ -200,4 +206,4 @@ class UserResponse(UserBase):
         """
         if self.name.lower() == self.surname.lower():
             raise ValueError("Name and surname must not be the same")
-        return self 
+        return self

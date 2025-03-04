@@ -13,4 +13,5 @@ def time_logger(func):
         execution_time = end_time - start_time
         logger.info(f"{func.__name__} took {execution_time:.2f} seconds to execute")
         return result
+
     return wrapper

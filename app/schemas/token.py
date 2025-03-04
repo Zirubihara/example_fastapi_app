@@ -1,4 +1,5 @@
 from typing import Optional
+
 from pydantic import BaseModel
 
 
@@ -9,4 +10,4 @@ class Token(BaseModel):
 
 class TokenPayload(BaseModel):
     sub: int | None = None
-    exp: Optional[int] = None 
+    exp: Optional[int] = None
