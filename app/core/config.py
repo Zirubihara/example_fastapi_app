@@ -127,23 +127,23 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     DESCRIPTION: str = "A FastAPI example application"
     API_V1_STR: str = "/api/v1"
-    
+
     # Environment
     ENVIRONMENT: str = "development"
-    
+
     # JWT Settings
     SECRET_KEY: str = "your-super-secret-key-change-this-in-production"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    
+
     # Database
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/fastapi_db"
     DATABASE_POOL_SIZE: int = 5
     DATABASE_MAX_OVERFLOW: int = 10
-    
+
     # CORS
     ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8000"]
-    
+
     # Email settings
     ALLOWED_EMAIL_DOMAIN: str = "@gmail.com"
     SMTP_HOST: str = "smtp.gmail.com"
@@ -153,5 +153,6 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+
 
 settings = Settings()

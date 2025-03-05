@@ -1,7 +1,7 @@
 # database.py
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from app.core.config import settings
 
@@ -9,6 +9,7 @@ from app.core.config import settings
 # Create SQLAlchemy base class
 class Base(DeclarativeBase):
     pass
+
 
 # Create database engine
 engine = create_engine(
